@@ -1,0 +1,231 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  color-scheme: light;
+  --tint: 99, 102, 241;
+}
+
+html, body, #root {
+  height: 100%;
+  margin: 0;
+  color: #14110F;
+  font-family: "Segoe UI", ui-sans-serif, system-ui, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+/* Ambient page wash — soft sage/cream, the "desk" the app floats on. */
+body {
+  background:
+    radial-gradient(1100px 620px at 12% -8%, #E9F3EC 0%, rgba(233, 243, 236, 0) 60%),
+    radial-gradient(900px 600px at 88% 4%, #EEF0FF 0%, rgba(238, 240, 255, 0) 62%),
+    radial-gradient(1000px 700px at 60% 108%, #FDF3E7 0%, rgba(253, 243, 231, 0) 58%),
+    linear-gradient(168deg, #EDF2EC 0%, #F4F1EA 46%, #EFEFF7 100%);
+  background-attachment: fixed;
+}
+
+::-webkit-scrollbar { width: 9px; height: 9px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb {
+  background: rgba(20, 17, 15, 0.14);
+  border-radius: 9px;
+  border: 2px solid transparent;
+  background-clip: padding-box;
+}
+::-webkit-scrollbar-thumb:hover { background: rgba(20, 17, 15, 0.26); background-clip: padding-box; }
+
+@layer components {
+  /* ---------------- surfaces ---------------- */
+  .card {
+    position: relative;
+    background: linear-gradient(170deg, rgba(255, 255, 255, 0.96) 0%, #FFFcf8 100%);
+    border: 1px solid rgba(230, 224, 214, 0.9);
+    border-radius: 1.25rem;
+    box-shadow: 0 10px 30px rgba(20, 17, 15, 0.045), 0 1px 0 rgba(255, 255, 255, 0.8) inset;
+    transition: transform 0.35s cubic-bezier(0.22, 1, 0.36, 1),
+                box-shadow 0.35s cubic-bezier(0.22, 1, 0.36, 1),
+                border-color 0.35s ease;
+  }
+  .card:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 22px 44px -18px rgba(20, 17, 15, 0.2), 0 1px 0 rgba(255, 255, 255, 0.9) inset;
+    border-color: rgba(20, 17, 15, 0.12);
+  }
+
+  /* Pastel-tinted card. Drive the hue with the --tint custom property. */
+  .card-tint {
+    background:
+      radial-gradient(520px 200px at 100% 0%, rgba(var(--tint), 0.16) 0%, rgba(var(--tint), 0) 70%),
+      linear-gradient(168deg, rgba(var(--tint), 0.09) 0%, rgba(255, 255, 255, 0.96) 60%);
+    border-color: rgba(var(--tint), 0.22);
+  }
+  .card-tint:hover {
+    border-color: rgba(var(--tint), 0.38);
+    box-shadow: 0 22px 44px -18px rgba(var(--tint), 0.3), 0 1px 0 rgba(255, 255, 255, 0.9) inset;
+  }
+
+  /* The dark "feature" card, like the upgrade panel in the reference dashboards. */
+  .card-dark {
+    background:
+      radial-gradient(420px 220px at 110% -10%, rgba(99, 102, 241, 0.5) 0%, rgba(99, 102, 241, 0) 65%),
+      linear-gradient(160deg, #221F1C 0%, #14110F 100%);
+    border-color: rgba(255, 255, 255, 0.1);
+    color: #FFFcf8;
+  }
+
+  .glass {
+    background: rgba(255, 252, 248, 0.72);
+    backdrop-filter: blur(14px) saturate(1.3);
+    -webkit-backdrop-filter: blur(14px) saturate(1.3);
+    border: 1px solid rgba(255, 255, 255, 0.6);
+  }
+
+  /* The whole app floats on the page wash. */
+  .shell {
+    border-radius: 1.75rem;
+    box-shadow: 0 40px 90px -34px rgba(20, 17, 15, 0.32), 0 6px 20px -12px rgba(20, 17, 15, 0.12);
+    border: 1px solid rgba(255, 255, 255, 0.65);
+    overflow: hidden;
+  }
+
+  /* ---------------- accents ---------------- */
+  .tint-chip {
+    background: rgba(var(--tint), 0.12);
+    color: rgb(var(--tint));
+    border: 1px solid rgba(var(--tint), 0.24);
+  }
+
+  .halo {
+    position: relative;
+  }
+  .halo::before {
+    content: "";
+    position: absolute;
+    inset: -1px;
+    border-radius: inherit;
+    padding: 1px;
+    background: linear-gradient(135deg, rgba(var(--tint), 0.55), rgba(var(--tint), 0) 55%);
+    -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+    -webkit-mask-composite: xor;
+    mask-composite: exclude;
+    pointer-events: none;
+  }
+
+  /* Hover light sweep — the Apple-style specular pass. */
+  .shine { position: relative; overflow: hidden; }
+  .shine::after {
+    content: "";
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    width: 45%;
+    left: -60%;
+    background: linear-gradient(100deg, transparent, rgba(255, 255, 255, 0.55), transparent);
+    transform: skewX(-18deg);
+    transition: left 0.65s cubic-bezier(0.22, 1, 0.36, 1);
+    pointer-events: none;
+  }
+  .shine:hover::after { left: 120%; }
+
+  .grain {
+    background-image: url("/img/grain.svg");
+    background-size: 180px 180px;
+    opacity: 0.4;
+    mix-blend-mode: multiply;
+    pointer-events: none;
+  }
+
+  /* Segmented capacity meter, as in the reference "Operations 780 / 1000" card. */
+  .seg {
+    height: 1.9rem;
+    border-radius: 0.55rem;
+    background: rgba(20, 17, 15, 0.06);
+    border: 1px dashed rgba(20, 17, 15, 0.14);
+    transition: transform 0.4s cubic-bezier(0.22, 1, 0.36, 1), background 0.4s ease;
+  }
+  .seg-on {
+    background: linear-gradient(160deg, rgba(var(--tint), 0.95), rgba(var(--tint), 0.62));
+    border: 1px solid rgba(var(--tint), 0.5);
+    box-shadow: 0 6px 14px -8px rgba(var(--tint), 0.9);
+  }
+}
+
+@layer utilities {
+  .reveal { animation: fade-up 0.55s cubic-bezier(0.22, 1, 0.36, 1) backwards; }
+  .anim-delay-1 { animation-delay: 60ms; }
+  .anim-delay-2 { animation-delay: 120ms; }
+  .anim-delay-3 { animation-delay: 180ms; }
+  .anim-delay-4 { animation-delay: 240ms; }
+  .anim-delay-5 { animation-delay: 300ms; }
+
+  .text-gradient {
+    background: linear-gradient(96deg, #14110F 0%, #3F3BA8 42%, #0E9F7E 78%, #14110F 100%);
+    background-size: 220% 100%;
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+    animation: gradient-pan 9s ease infinite;
+  }
+
+  .press { transition: transform 0.18s cubic-bezier(0.22, 1, 0.36, 1); }
+  .press:active { transform: scale(0.97); }
+}
+
+/* ---------------- form controls ---------------- */
+input[type="range"] {
+  -webkit-appearance: none;
+  appearance: none;
+  height: 18px;
+  background: transparent;
+  cursor: pointer;
+}
+input[type="range"]::-webkit-slider-runnable-track {
+  height: 4px;
+  border-radius: 4px;
+  background: linear-gradient(90deg, #C7CCFF, #E6E0D6);
+}
+input[type="range"]::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  width: 15px;
+  height: 15px;
+  margin-top: -5.5px;
+  border-radius: 50%;
+  background: #14110F;
+  border: 2px solid #FFFcf8;
+  box-shadow: 0 2px 8px rgba(99, 102, 241, 0.45);
+  transition: transform 0.2s ease;
+}
+input[type="range"]::-webkit-slider-thumb:hover { transform: scale(1.18); }
+input[type="range"]::-moz-range-track {
+  height: 4px;
+  border-radius: 4px;
+  background: linear-gradient(90deg, #C7CCFF, #E6E0D6);
+}
+input[type="range"]::-moz-range-thumb {
+  width: 13px;
+  height: 13px;
+  border-radius: 50%;
+  background: #14110F;
+  border: 2px solid #FFFcf8;
+}
+
+select {
+  appearance: none;
+  background-image: url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M1 1l4 4 4-4' stroke='%238A8278' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 0.7rem center;
+  padding-right: 1.9rem;
+}
+
+.mono { font-family: "Cascadia Mono", "Segoe UI Mono", ui-monospace, monospace; }
+.display { font-family: Georgia, "Iowan Old Style", "Times New Roman", serif; }
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+  }
+}

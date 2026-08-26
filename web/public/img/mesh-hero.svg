@@ -1,0 +1,25 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="420" viewBox="0 0 1200 420" fill="none">
+  <defs>
+    <radialGradient id="a" cx="0" cy="0" r="1" gradientTransform="translate(180 90) rotate(38) scale(520 380)">
+      <stop stop-color="#C7CCFF" stop-opacity="0.95"/>
+      <stop offset="1" stop-color="#C7CCFF" stop-opacity="0"/>
+    </radialGradient>
+    <radialGradient id="b" cx="0" cy="0" r="1" gradientTransform="translate(700 40) rotate(20) scale(560 400)">
+      <stop stop-color="#A7E3CD" stop-opacity="0.9"/>
+      <stop offset="1" stop-color="#A7E3CD" stop-opacity="0"/>
+    </radialGradient>
+    <radialGradient id="c" cx="0" cy="0" r="1" gradientTransform="translate(1080 300) rotate(-30) scale(480 340)">
+      <stop stop-color="#F9C9D4" stop-opacity="0.9"/>
+      <stop offset="1" stop-color="#F9C9D4" stop-opacity="0"/>
+    </radialGradient>
+    <radialGradient id="d" cx="0" cy="0" r="1" gradientTransform="translate(460 400) rotate(-12) scale(520 300)">
+      <stop stop-color="#FBE3A2" stop-opacity="0.8"/>
+      <stop offset="1" stop-color="#FBE3A2" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+  <rect width="1200" height="420" fill="#FBFAF7"/>
+  <rect width="1200" height="420" fill="url(#a)"/>
+  <rect width="1200" height="420" fill="url(#b)"/>
+  <rect width="1200" height="420" fill="url(#c)"/>
+  <rect width="1200" height="420" fill="url(#d)"/>
+</svg>

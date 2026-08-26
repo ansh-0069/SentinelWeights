@@ -1,0 +1,29 @@
+# Python
+.venv/
+__pycache__/
+*.pyc
+.pytest_cache/
+
+# Node / frontend build
+node_modules/
+dist/
+*.tsbuildinfo
+
+# Generated at runtime: sample artifacts, scan vaults, benchmark output
+backend/vault/
+backend/samples/vault/
+backend/samples/snapshots/
+backend/bench/results/
+
+# Secrets: demo signing keys are generated locally, never committed
+backend/signing/_keys/
+*.pem
+*.key
+.env
+.env.*
+
+# Misc
+terminals_*.log
+*.log
+.DS_Store
+Thumbs.db
