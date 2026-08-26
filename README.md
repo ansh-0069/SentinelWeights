@@ -1,4 +1,4 @@
-# SentinelWeights — Prototype (`proto.demo2`)
+# SentinelWeights — Prototype 
 
 > **Zero Trust for AI Models** — a pre-deployment scanner that X-rays model weight
 > files for **hidden-data (steganography)**, **artifact-execution risk (unsafe
