@@ -22,8 +22,15 @@ COPY --from=webbuild /web/dist /app/static
 
 ENV STATIC_DIR=/app/static
 ENV PYTHONUNBUFFERED=1
+# Reuse committed detectors/empirical_baselines.json (do not retrain at build).
+ENV FORCE_BASELINE_FIT=0
+
+# Bake the gallery/snapshots/bench into the image so runtime can bind $PORT
+# immediately. Render kills deploys that don't open a port within ~5 minutes;
+# make_samples alone exceeds that window if run in CMD.
+RUN python -m samples.make_samples
 
 EXPOSE 8000
 
-# Render injects $PORT; generate gallery then serve API+SPA.
-CMD ["sh", "-c", "python -m samples.make_samples && uvicorn app:app --host 0.0.0.0 --port ${PORT:-8000}"]
+# Render injects $PORT — bind it right away (no pre-start work).
+CMD ["sh", "-c", "uvicorn app:app --host 0.0.0.0 --port ${PORT:-8000}"]

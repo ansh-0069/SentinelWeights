@@ -737,8 +737,14 @@ def seed_attestation_ledger():
 
 
 if __name__ == "__main__":
-    print("Fitting empirical bit-plane baselines from trained clean models...")
-    fit_empirical_baselines(n_seeds=8)
+    # On Render/Docker, reuse the committed baselines so boot/build stays
+    # within the platform port-scan window. Set FORCE_BASELINE_FIT=1 to recompute.
+    force_fit = os.environ.get("FORCE_BASELINE_FIT", "").strip() in ("1", "true", "yes")
+    if (not force_fit) and os.path.exists(BASELINE_PATH):
+        print(f"Reusing committed empirical baselines at {BASELINE_PATH}")
+    else:
+        print("Fitting empirical bit-plane baselines from trained clean models...")
+        fit_empirical_baselines(n_seeds=8)
     # reload baselines into detector module
     import detectors.baselines as bl
     bl.reload_empirical()
