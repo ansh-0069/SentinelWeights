@@ -9,7 +9,8 @@ import uuid
 
 from fastapi import FastAPI, UploadFile, File, WebSocket, WebSocketDisconnect, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import Response, JSONResponse
+from fastapi.responses import FileResponse, Response, JSONResponse
+from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel, Field
 
 import ablation
@@ -587,3 +588,58 @@ def sampled_scan(req: SampledRequest):
     if generated:
         result["generated_fixture"] = generated
     return result
+
+
+# ===================== Production: /api + SPA =====================
+# Local/dev keeps routes at the root (Vite strips the /api prefix).
+# With STATIC_DIR set, this process serves the built UI and mounts the API
+# under /api so the same frontend paths work on a single public port.
+
+api_app = app
+
+
+def create_app() -> FastAPI:
+    static_dir = (os.environ.get("STATIC_DIR") or "").strip()
+    if not static_dir or not os.path.isdir(static_dir):
+        return api_app
+
+    root = FastAPI(
+        title="SentinelWeights",
+        version="2.0",
+        description="Zero Trust for AI Models — prototype scanner (production)",
+    )
+    root.add_middleware(
+        CORSMiddleware, allow_origins=["*"], allow_methods=["*"], allow_headers=["*"]
+    )
+
+    # Mounted sub-apps do not always inherit lifespan; re-run detector init here.
+    @root.on_event("startup")
+    def _prod_startup():
+        from detectors import baselines as bl
+        bl.reload_empirical()
+        l4_fusion.init_anomaly_head()
+
+    root.mount("/api", api_app)
+
+    assets_dir = os.path.join(static_dir, "assets")
+    if os.path.isdir(assets_dir):
+        root.mount("/assets", StaticFiles(directory=assets_dir), name="assets")
+
+    index_html = os.path.join(static_dir, "index.html")
+
+    @root.get("/")
+    async def spa_index():
+        return FileResponse(index_html)
+
+    @root.get("/{full_path:path}")
+    async def spa_fallback(full_path: str):
+        # Never shadow API (mounted above); this only catches UI paths.
+        candidate = os.path.join(static_dir, full_path)
+        if full_path and os.path.isfile(candidate):
+            return FileResponse(candidate)
+        return FileResponse(index_html)
+
+    return root
+
+
+app = create_app()

@@ -74,6 +74,18 @@ npm install
 npm run dev                                        # http://localhost:5173
 ```
 
+### Option C — Host on Render (public demo URL)
+One container serves the built UI and the API under `/api` (see root `Dockerfile`
++ `render.yaml`).
+
+1. Push this repo to GitHub (already configured as `origin`).
+2. Open [Render Blueprints](https://dashboard.render.com/blueprints) → **New Blueprint Instance**.
+3. Connect `ansh-0069/SentinelWeights` and apply `render.yaml`.
+4. After the first deploy, open `https://<service>.onrender.com`.
+
+Free tier cold-starts after idle; warm the URL before a live demo. Local
+`docker compose up` remains the primary pitch path.
+
 ---
 
 ## The sample gallery (defensive only, inert payloads)

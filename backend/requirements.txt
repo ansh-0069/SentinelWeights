@@ -8,3 +8,4 @@ cryptography==43.0.3
 python-multipart==0.0.17
 pydantic==2.9.2
 onnx==1.17.0
+reportlab==5.0.1

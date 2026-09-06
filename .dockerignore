@@ -1,0 +1,14 @@
+.git
+.venv
+**/__pycache__
+**/node_modules
+**/dist
+**/.pytest_cache
+*.pyc
+*.log
+backend/signing/_keys
+backend/samples/vault
+backend/samples/snapshots
+backend/bench/results
+.env
+.env.*

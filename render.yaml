@@ -1,0 +1,13 @@
+services:
+  - type: web
+    name: sentinelweights
+    runtime: docker
+    plan: free
+    dockerfilePath: ./Dockerfile
+    dockerContext: .
+    healthCheckPath: /api/samples
+    envVars:
+      - key: PYTHONUNBUFFERED
+        value: "1"
+      - key: STATIC_DIR
+        value: /app/static
