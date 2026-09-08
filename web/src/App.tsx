@@ -74,6 +74,43 @@ const BACKDOOR_IDS = ["backdoor_toycnn", "borderline_backdoor"];
 const BENIGN_IDS = ["public_clean", "quantized_clean"];
 const FAILSAFE_IDS = ["malformed", "truncated"];
 
+const EVIDENCE_LABELS: Record<string, string> = {
+  bitplane_z: "Bit plane",
+  window_z: "Window",
+  randfeat_z: "Randomness",
+  distdiv_z: "Distribution",
+  crosslayer_z: "Cross-layer",
+  precision_z: "Precision",
+  deadspace_z: "Dead space",
+  contract_z: "Contract",
+  backdoor_z: "Backdoor",
+};
+
+function strongestEvidence(report: Report | null) {
+  if (!report) return { value: "—", badge: "Run a scan", filled: 0 };
+
+  const critical = report.findings.find((finding) => finding.severity === "CRITICAL");
+  if (critical) return { value: "Static", badge: "CRITICAL", filled: 1 };
+  if (report.verdict.override === "UNLOADABLE") {
+    return { value: "Ingest", badge: "unloadable", filled: 1 };
+  }
+
+  const entries = Object.entries(report.fusion?.features || {})
+    .filter((entry): entry is [string, number] => Number.isFinite(entry[1]))
+    .sort((a, b) => b[1] - a[1]);
+  const strongest = entries[0];
+  if (!strongest || (report.verdict.band === "CLEAN" && report.findings.length === 0)) {
+    return { value: "None", badge: "below threshold", filled: 0 };
+  }
+
+  const [key, strength] = strongest;
+  return {
+    value: EVIDENCE_LABELS[key] || key.replace(/_z$/, ""),
+    badge: `z ${strength.toFixed(2)}`,
+    filled: Math.min(1, strength / 8),
+  };
+}
+
 export default function App() {
   const [samples, setSamples] = useState<SampleItem[]>([]);
   const [methodology, setMethodology] = useState<string>("");
@@ -158,9 +195,7 @@ export default function App() {
   const isFailsafe = FAILSAFE_IDS.includes(activeSample);
 
   const verdictTone = toneForBand(report?.verdict.color);
-  const gatesCovered = new Set(
-    samples.map((s) => s.expected_verdict?.gate).filter(Boolean)
-  ).size;
+  const evidenceMetric = strongestEvidence(report);
   const auc = bench?.roc?.auc;
 
   return (
@@ -347,13 +382,12 @@ export default function App() {
                   delay={70}
                 />
                 <MetricCard
-                  label="Gallery gates"
-                  value={gatesCovered || "—"}
-                  unit="of 5"
-                  filled={gatesCovered / 5}
-                  badge={`${samples.length} models`}
-                  tone="mint"
-                  icon={<Icon name="network" className="w-4 h-4" />}
+                  label="Strongest evidence"
+                  value={evidenceMetric.value}
+                  filled={evidenceMetric.filled}
+                  badge={evidenceMetric.badge}
+                  tone={report ? (verdictTone as any) : "mint"}
+                  icon={<Icon name="chart" className="w-4 h-4" />}
                   delay={140}
                 />
                 <div
