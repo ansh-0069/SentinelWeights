@@ -126,8 +126,13 @@ def forge(base: dict[str, np.ndarray], *, n_bytes: int = 4096, n_planes: int = 6
         return out, {"supported": False,
                      "reason": "No float32 tensor large enough to host a payload."}
 
-    payload_bits_needed = int(n_bytes) * 8
+    payload = make_payload(int(n_bytes), payload_kind, seed)
+    payload_stream = np.unpackbits(
+        np.frombuffer(payload, dtype=np.uint8), bitorder="little"
+    ).astype(np.uint32)
+    payload_bits_needed = int(payload_stream.size)
     per_tensor_bits = payload_bits_needed / len(targets)
+    payload_cursor = 0
 
     clear_mask = np.uint32(0xFFFFFFFF)
     for p in planes:
@@ -157,13 +162,23 @@ def forge(base: dict[str, np.ndarray], *, n_bytes: int = 4096, n_planes: int = 6
                 draw = (rng.random(idx.size) < pr).astype(np.uint32)
                 new_low |= draw << np.uint32(p)
         else:
-            span = np.uint32((1 << len(planes)) - 1)
-            new_low = (rng.integers(0, int(span) + 1, size=idx.size)
-                       .astype(np.uint32)) << np.uint32(planes[0])
+            # Encode the requested inert payload itself, rather than merely
+            # generating unrelated random plane values. One bit is written to
+            # each selected plane of each touched weight.
+            available = int(idx.size * len(planes))
+            remaining = payload_stream[payload_cursor:payload_cursor + available]
+            new_low = np.zeros(idx.size, dtype=np.uint32)
+            if remaining.size:
+                padded = np.zeros(available, dtype=np.uint32)
+                padded[:remaining.size] = remaining
+                matrix = padded.reshape(idx.size, len(planes))
+                for column, plane in enumerate(planes):
+                    new_low |= matrix[:, column] << np.uint32(plane)
+            payload_cursor += int(remaining.size)
 
         bits[idx] = (bits[idx] & clear_mask) | new_low
         out[name] = bits.view(np.float32).reshape(host.shape)
-        placed_bits += idx.size * rate
+        placed_bits += (idx.size * rate if entropy_matched else remaining.size)
         touched += int(idx.size)
         plane_report.append({"tensor": name, "slots": int(idx.size),
                              "bits_per_slot": round(rate, 3)})
@@ -190,6 +205,42 @@ def forge(base: dict[str, np.ndarray], *, n_bytes: int = 4096, n_planes: int = 6
                  "maximum entropy signature."),
     }
     return out, meta
+
+
+def preview(base: dict[str, np.ndarray], *, n_bytes: int = 4096, n_planes: int = 6,
+            bit_offset: int = 0, layout: str = "contiguous",
+            entropy_matched: bool = False, spread_tensors: int = 1,
+            tensor: str | None = None, payload_kind: str = "random",
+            start_frac: float = 0.25, seed: int = 42) -> dict:
+    """Estimate usable capacity without modifying or scanning the model."""
+    del layout, payload_kind, start_frac, seed  # do not affect raw capacity
+    bit_offset = int(max(0, min(MAX_PLANE, bit_offset)))
+    n_planes = int(max(1, min(8, n_planes)))
+    planes = [p for p in range(bit_offset, bit_offset + n_planes) if p <= MAX_PLANE]
+    candidates = _float_tensor_names(base)
+    targets = ([tensor] if tensor and tensor in candidates
+               else candidates[:max(1, int(spread_tensors))])
+    if not targets or not planes:
+        return {"supported": False, "requested_bytes": int(n_bytes),
+                "capacity_bytes": 0, "effective_bytes": 0, "targets": []}
+    capacity_bits = sum(
+        base[name].size * bits_per_slot(base[name], planes, entropy_matched)
+        for name in targets
+    )
+    capacity_bytes = int(capacity_bits // 8)
+    return {
+        "supported": True,
+        "requested_bytes": int(n_bytes),
+        "capacity_bytes": capacity_bytes,
+        "effective_bytes": min(int(n_bytes), capacity_bytes),
+        "capacity_shortfall": max(0, int(n_bytes) - capacity_bytes),
+        "targets": targets,
+        "planes": planes,
+        "precision_floor": 11,
+        "note": ("Estimated from the clean model's measured per-plane entropy."
+                 if entropy_matched else
+                 "Each selected plane carries one payload bit per available weight."),
+    }
 
 
 # ----------------------------- forge + scan -----------------------------

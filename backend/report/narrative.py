@@ -56,6 +56,22 @@ def build_narratives(results: dict, decision: dict) -> list[dict]:
             "evidence_codes": ["l2_bitplane"],
         })
 
+    contract = results.get("l2_contract", {})
+    violations = contract.get("violations") or []
+    if violations:
+        v = violations[0]
+        out.append({
+            "severity": "HIGH",
+            "title": "Precision contract violated",
+            "body": (
+                f"Tensor `{v.get('tensor')}` has {v.get('occupancy_pct')}% of its "
+                f"weights occupying {v.get('freed_planes')}, even though those mantissa "
+                f"planes were freed by export quantization and should remain zero. "
+                f"Estimated occupied capacity is approximately {v.get('est_bytes')} bytes."
+            ),
+            "evidence_codes": ["l2_contract"],
+        })
+
     xl = results.get("l2_crosslayer", {})
     flagged_layers = [p for p in (xl.get("per_layer") or []) if p.get("flagged")]
     if flagged_layers:

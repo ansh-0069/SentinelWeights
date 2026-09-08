@@ -37,7 +37,9 @@ export default function VerdictBanner({ verdict }: { verdict: Verdict }) {
       </div>
       <p className="relative text-[14px] text-ink mt-2.5 leading-relaxed">{verdict.language}</p>
       <p className="relative text-[12px] text-ink-400 mt-2">
-        No indicators within scan scope — never “proven clean.”
+        {verdict.gate === "APPROVE"
+          ? "No indicators within scan scope — never ‘proven clean.’"
+          : "Indicators were detected within scan scope — review the evidence and coverage below."}
       </p>
     </div>
   );

@@ -17,10 +17,12 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 import ablation
 import adversary
 import attest
+import coverage as coverage_mod
 import ir as ir_mod
 import lineage
 import sampled
 from detectors import contract, l2_contract, l4_fusion
+from report.narrative import build_narratives
 from samples.make_samples import export_quantize, train_clean_cnn
 
 VAULT = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))),
@@ -146,6 +148,45 @@ def test_forge_never_writes_outside_requested_planes(clean_state):
     diff_bits = np.bitwise_or.reduce(a ^ b)
     allowed = np.uint32(sum(1 << k for k in meta["planes"]))
     assert diff_bits & ~allowed == 0, f"wrote outside planes {meta['planes']}"
+
+
+def test_payload_kind_changes_the_bytes_actually_embedded(clean_state):
+    """The payload selector must affect model bits, not only response metadata."""
+    random_state, random_meta = adversary.forge(
+        clean_state, n_bytes=512, n_planes=4, tensor="conv3.weight",
+        payload_kind="random", seed=17,
+    )
+    compressed_state, compressed_meta = adversary.forge(
+        clean_state, n_bytes=512, n_planes=4, tensor="conv3.weight",
+        payload_kind="compressed", seed=17,
+    )
+    assert random_meta["effective_bytes"] == compressed_meta["effective_bytes"] == 512
+    assert not np.array_equal(random_state["conv3.weight"], compressed_state["conv3.weight"])
+
+
+def test_capacity_preview_matches_single_tensor_forge(clean_state):
+    estimate = adversary.preview(
+        clean_state, n_bytes=4096, n_planes=6, tensor="conv3.weight",
+    )
+    _, actual = adversary.forge(
+        clean_state, n_bytes=4096, n_planes=6, tensor="conv3.weight",
+    )
+    assert estimate["effective_bytes"] == actual["effective_bytes"]
+    assert estimate["planes"] == actual["planes"]
+
+
+def test_contract_detector_is_visible_in_coverage_and_narrative():
+    summary = coverage_mod.summarize({"l2_contract": {"coverage": "Executed"}})
+    contract_badge = next(b for b in summary["badges"] if b["detector"] == "l2_contract")
+    assert contract_badge["state"] == "Executed"
+    narratives = build_narratives({
+        "l2_contract": {"violations": [{
+            "tensor": "conv3.weight", "occupancy_pct": 4.1,
+            "freed_planes": "b0-b10", "est_bytes": 4096,
+        }]},
+    }, {"gate": "HARD_BLOCK"})
+    contract_story = next(n for n in narratives if "contract" in n["title"].lower())
+    assert contract_story["evidence_codes"] == ["l2_contract"]
 
 
 # --------------------------- merkle attestation ---------------------------

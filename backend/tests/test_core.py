@@ -14,7 +14,7 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from detectors import l1_static, l2_bitplane, l2_window, l2_crosslayer, l2_deadspace, l4_fusion
 from detectors.l1_static import _scan_pickle_bytes
-from policy import decide
+from policy import band_for, decide
 import ir as ir_mod
 from samples.make_samples import (
     train_clean_cnn, export_quantize, embed_payload, build_pickle_fixture,
@@ -47,6 +47,15 @@ def stego_path(tmp_path_factory, quantized_clean):
     p = tmp_path_factory.mktemp("m") / "stego.safetensors"
     save_file({k: np.ascontiguousarray(v) for k, v in stego.items()}, str(p))
     return str(p)
+
+
+@pytest.mark.parametrize("score, expected", [
+    (20.0, "CLEAN"), (20.1, "LOW_CONCERN"),
+    (50.0, "LOW_CONCERN"), (50.1, "SUSPICIOUS"),
+    (80.0, "SUSPICIOUS"), (80.1, "DANGEROUS"),
+])
+def test_decimal_risk_scores_have_no_policy_gap(score, expected):
+    assert band_for(score)["band"] == expected
 
 
 def test_pickle_fixture_is_critical_without_execution():
@@ -204,4 +213,3 @@ def test_onnx_loader_if_present():
     assert rep["verdict"]["gate"] in ("APPROVE", "APPROVE_WITH_CAVEATS", "REVIEW")
     # Must not hard-block a tiny public ONNX
     assert rep["verdict"]["gate"] != "HARD_BLOCK"
-

@@ -415,6 +415,12 @@ def forge(req: ForgeRequest):
                                     **req.model_dump())
 
 
+@app.post("/forge/preview")
+def forge_preview(req: ForgeRequest):
+    """Estimate payload capacity for the clean demo host without modifying it."""
+    return adversary.preview(_clean_base_state(), **req.model_dump())
+
+
 @app.get("/frontier")
 def get_frontier():
     data = frontier.load()

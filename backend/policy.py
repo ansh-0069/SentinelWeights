@@ -3,16 +3,22 @@ from __future__ import annotations
 
 BANDS = [
     (0, 20, "CLEAN", "Auto-approve, sign, register", "green"),
-    (21, 50, "LOW_CONCERN", "Approve with logged caveats", "lime"),
-    (51, 80, "SUSPICIOUS", "Block; require human security review", "amber"),
-    (81, 100, "DANGEROUS", "Hard block; quarantine; alert SOC", "red"),
+    (20, 50, "LOW_CONCERN", "Approve with logged caveats", "lime"),
+    (50, 80, "SUSPICIOUS", "Block; require human security review", "amber"),
+    (80, 100, "DANGEROUS", "Hard block; quarantine; alert SOC", "red"),
 ]
 
 
 def band_for(score: float) -> dict:
-    for lo, hi, name, action, color in BANDS:
-        if lo <= score <= hi:
-            return {"band": name, "action": action, "color": color, "range": [lo, hi]}
+    # Scores are decimal values. Treat the documented integer boundaries as
+    # half-open bands so values such as 20.1 and 50.1 cannot fall through to the
+    # fail-safe DANGEROUS default.
+    for index, (lo, hi, name, action, color) in enumerate(BANDS):
+        lower_ok = score >= lo if index == 0 else score > lo
+        if lower_ok and score <= hi:
+            display_lo = lo if index == 0 else lo + 1
+            return {"band": name, "action": action, "color": color,
+                    "range": [display_lo, hi]}
     return {"band": "DANGEROUS", "action": "Hard block", "color": "red", "range": [81, 100]}
 
 

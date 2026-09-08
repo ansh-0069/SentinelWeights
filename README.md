@@ -119,8 +119,9 @@ inspected only — never deserialized**.
 | `GET` | `/report/{scan_id}.pdf` | Signed PDF evidence artifact |
 | `POST` | `/verify` | Verify a report signature (`{scan_id}`) |
 | `GET` | `/samples` | Sample gallery listing |
+| `POST` | `/forge/preview` | Estimate payload capacity without modifying or scanning the model |
 | `POST` | `/forge` | Embed a caller-specified payload into the clean model and scan it |
-| `GET` | `/frontier` | Swept attack space: gate, risk, fidelity, blind spots |
+| `GET` | `/frontier` | Finite measured sweep: gate, risk, fidelity, blind spots |
 | `POST` | `/attest` | Merkle root over per-tensor hashes, signed and ledgered |
 | `GET` | `/attestations` | Attestation ledger summary |
 | `POST` | `/attest/diff` | Candidate vs attested baseline, with bit-level forensics |
@@ -154,10 +155,11 @@ See `proto.demo2.md` for the full screen-by-screen spec and demo script.
 
 The UI has five views. Three of them exist to be attacked:
 
-- **Red team** — the *Adversary Lab* lets a judge author the attack (payload size,
-  mantissa depth, plane offset, layout, distribution matching) and watch the real
-  pipeline verdict. The *Detection Frontier* sweeps that whole space and names the
-  configurations we miss. Every statistical blind spot is a payload written into
+- **Red team** — a guided live experiment lets a judge choose a preset or tune the
+  payload size, mantissa depth, plane offset, layout, and distribution matching,
+  preview usable capacity, then inspect the real pipeline verdict by evidence type.
+  The *Detection Frontier* compares it with 33 measured configurations and names
+  the cases statistics misses. Every statistical blind spot is a payload written into
   *kept* mantissa planes, where payload bits and trained value bits are the same
   thing to any bit-level test — no threshold change fixes that.
 - **Proof** — the attested Merkle baseline that catches those blind spots and

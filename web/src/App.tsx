@@ -24,8 +24,7 @@ import RemediationPanel from "./components/RemediationPanel";
 import MLBOMPanel from "./components/MLBOMPanel";
 import NarrativePanel from "./components/NarrativePanel";
 import DemoTour from "./components/DemoTour";
-import AdversaryLab from "./components/AdversaryLab";
-import DetectionFrontier from "./components/DetectionFrontier";
+import RedTeamWorkspace from "./components/RedTeamWorkspace";
 import AttestationPanel from "./components/AttestationPanel";
 import MeasuredLineage from "./components/MeasuredLineage";
 import AblationPanel from "./components/AblationPanel";
@@ -222,19 +221,27 @@ export default function App() {
             })}
           </nav>
 
-          <div className="relative flex items-center justify-between px-2 mb-2">
-            <span className="text-[10.5px] uppercase tracking-[0.16em] text-white/35">Models</span>
-            <span className="text-[10.5px] text-white/30 tabular-nums">{samples.length}</span>
-          </div>
-          <div className="relative flex-1 overflow-auto -mx-1 px-1">
-            <SampleGallery
-              samples={samples}
-              activeId={activeSample}
-              compact
-              onSelect={(s) => startScan({ sampleId: s.id }, s.id)}
-              onUpload={(f) => startScan({ file: f })}
-            />
-          </div>
+          {view === "redteam" ? (
+            <div className="relative flex-1 px-2">
+              <div className="rounded-2xl border border-white/10 bg-white/[0.06] p-3.5">
+                <div className="flex items-center gap-2 text-white/85 text-[12px] font-medium">
+                  <span className="w-7 h-7 rounded-lg bg-mint/15 text-mint grid place-items-center"><Icon name="shield" className="w-3.5 h-3.5" /></span>
+                  Safe attack host
+                </div>
+                <p className="text-[11px] text-white/40 leading-relaxed mt-2">Each run starts from the clean baseline in memory. The source model is never overwritten.</p>
+                <button className="mt-3 text-[11px] text-white/65 hover:text-white underline underline-offset-4" onClick={() => setView("scan")}>View the full model gallery</button>
+              </div>
+            </div>
+          ) : <>
+            <div className="relative flex items-center justify-between px-2 mb-2">
+              <span className="text-[10.5px] uppercase tracking-[0.16em] text-white/35">Demo models · expected gate</span>
+              <span className="text-[10.5px] text-white/30 tabular-nums">{samples.length}</span>
+            </div>
+            <div className="relative flex-1 overflow-auto -mx-1 px-1">
+              <SampleGallery samples={samples} activeId={activeSample} compact
+                onSelect={(s) => startScan({ sampleId: s.id }, s.id)} onUpload={(f) => startScan({ file: f })} />
+            </div>
+          </>}
 
           <div className="relative px-2 pt-4 mt-3 border-t border-white/10">
             <div className="text-[12.5px] text-white/80">Precision Care Challenge</div>
@@ -294,7 +301,7 @@ export default function App() {
                   className={`w-1.5 h-1.5 rounded-full ${scanning ? "animate-blink" : ""}`}
                   style={{ background: "currentColor" }}
                 />
-                {scanning ? "Scanning" : replay ? "Snapshot" : "Live"}
+                {scanning ? "Scanning" : replay ? "Stored snapshot" : "Ready"}
               </span>
 
               <div className="flex items-center gap-2.5 pl-3 ml-1 border-l border-paper-line animate-fade-in">
@@ -565,27 +572,7 @@ export default function App() {
               </>
             )}
 
-            {view === "redteam" && (
-              <>
-                <Section
-                  title="Adversary Lab"
-                  subtitle="You are the attacker. Nothing here is precomputed."
-                  tone="blush"
-                  icon={<Icon name="target" className="w-4 h-4" />}
-                >
-                  <AdversaryLab />
-                </Section>
-                <Section
-                  title="Detection frontier"
-                  subtitle="The whole attack space, swept — including where we lose"
-                  tone="lavender"
-                  icon={<Icon name="chart" className="w-4 h-4" />}
-                  delay={70}
-                >
-                  <DetectionFrontier />
-                </Section>
-              </>
-            )}
+            {view === "redteam" && <RedTeamWorkspace />}
 
             {view === "proof" && (
               <>

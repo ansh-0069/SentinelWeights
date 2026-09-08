@@ -14,6 +14,7 @@ DETECTOR_LABELS = {
     "l2_precision": "L2.5 Precision probe",
     "l2_crosslayer": "L2.6 Cross-layer coupling",
     "l2_deadspace": "L2.7 Dead-parameter covert channel",
+    "l2_contract": "L2.8 Precision-contract integrity",
     "l3_backdoor": "L3 Backdoor hunt",
 }
 

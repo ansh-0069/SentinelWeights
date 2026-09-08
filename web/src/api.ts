@@ -114,6 +114,7 @@ export type ForgeRequest = {
 };
 
 export const forge = (req: ForgeRequest) => post("/forge", req);
+export const previewForge = (req: ForgeRequest) => post("/forge/preview", req);
 export const getFrontier = () => get("/frontier");
 export const getLineage = () => get("/lineage");
 export const getAblation = () => get("/ablation");
